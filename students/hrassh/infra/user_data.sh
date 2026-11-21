@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-apt-get update -y
-apt-get install -y docker.io
+dnf install -y docker
 systemctl enable --now docker
-usermod -aG docker ubuntu
+usermod -aG docker ec2-user

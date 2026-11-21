@@ -159,7 +159,7 @@ jobs:
       - name: Wait for SSH
         run: |
           for i in $(seq 1 30); do
-            if ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=5 ubuntu@"$HOST" true; then
+            if ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=5 ec2-user@"$HOST" true; then
               exit 0
             fi
             echo "SSH is not ready yet ($i/30)"
@@ -169,7 +169,7 @@ jobs:
 
       - name: Run container
         run: |
-          ssh -i ~/.ssh/deploy_key ubuntu@"$HOST" bash -s << EOF
+          ssh -i ~/.ssh/deploy_key ec2-user@"$HOST" bash -s << EOF
           set -e
           sudo cloud-init status --wait > /dev/null
           sudo docker pull $IMAGE
