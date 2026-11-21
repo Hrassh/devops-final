@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unit Converter</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f2f4f7; margin: 0; padding: 24px; }
+  .card { max-width: 520px; margin: 40px auto; background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  h1 { margin-top: 0; font-size: 24px; }
+  label { display: block; margin: 12px 0 4px; font-size: 14px; color: #555; }
+  select, input, button { width: 100%; padding: 8px; font-size: 16px; box-sizing: border-box; }
+  .row { display: flex; gap: 12px; }
+  .row > div { flex: 1; }
+  button { margin-top: 16px; background: #2563eb; color: #fff; border: 0; border-radius: 4px; cursor: pointer; }
+  #result { margin-top: 16px; font-size: 20px; font-weight: bold; min-height: 24px; }
+  footer { margin-top: 24px; font-size: 12px; color: #888; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Конвертер одиниць</h1>
+  <label for="category">Категорія</label>
+  <select id="category">
+    {% for category in units %}<option value="{{ category }}">{{ category }}</option>{% endfor %}
+  </select>
+  <label for="value">Значення</label>
+  <input id="value" type="number" step="any" value="1">
+  <div class="row">
+    <div><label for="from">З</label><select id="from"></select></div>
+    <div><label for="to">В</label><select id="to"></select></div>
+  </div>
+  <button id="convert">Конвертувати</button>
+  <div id="result"></div>
+  <footer>Версія: {{ version }} · Середовище: {{ env }}</footer>
+</div>
+<script>
+  const units = {{ units | tojson }};
+  const category = document.getElementById("category");
+  const fromSelect = document.getElementById("from");
+  const toSelect = document.getElementById("to");
+  const result = document.getElementById("result");
+
+  function fillUnits() {
+    const list = Object.keys(units[category.value]);
+    fromSelect.innerHTML = list.map(u => `<option>${u}</option>`).join("");
+    toSelect.innerHTML = list.map(u => `<option>${u}</option>`).join("");
+    toSelect.selectedIndex = list.length > 1 ? 1 : 0;
+  }
+
+  async function doConvert() {
+    const params = new URLSearchParams({
+      category: category.value,
+      value: document.getElementById("value").value,
+      from: fromSelect.value,
+      to: toSelect.value
+    });
+    const response = await fetch("/api/convert?" + params);
+    const data = await response.json();
+    result.textContent = response.ok
+      ? `${data.value} ${data.from_unit} = ${data.result} ${data.to_unit}`
+      : `Помилка: ${data.error}`;
+  }
+
+  category.addEventListener("change", fillUnits);
+  document.getElementById("convert").addEventListener("click", doConvert);
+  fillUnits();
+</script>
+</body>
+</html>
