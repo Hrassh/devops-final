@@ -1,0 +1,49 @@
+name: hrassh Terraform destroy
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type DESTROY to delete the EC2 infrastructure"
+        required: true
+
+env:
+  APP_DIR: students/hrassh
+  AWS_REGION: eu-central-1
+
+jobs:
+  destroy:
+    name: Terraform destroy
+    if: github.event.inputs.confirm == 'DESTROY'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}/infra
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Prepare SSH public key
+        env:
+          EC2_SSH_KEY_B64: ${{ secrets.EC2_SSH_KEY_B64 }}
+        run: |
+          echo "$EC2_SSH_KEY_B64" | base64 -d > /tmp/deploy_key
+          chmod 600 /tmp/deploy_key
+          echo "TF_VAR_public_key=$(ssh-keygen -y -f /tmp/deploy_key)" >> "$GITHUB_ENV"
+          rm -f /tmp/deploy_key
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.13.0"
+          terraform_wrapper: false
+
+      - name: Terraform init
+        run: terraform init -input=false -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" -backend-config="region=${{ env.AWS_REGION }}"
+
+      - name: Terraform destroy
+        run: terraform destroy -input=false -auto-approve -var="aws_region=${{ env.AWS_REGION }}"
