@@ -98,7 +98,7 @@ push у main
 
 - **State Terraform** зберігається в S3-бакеті (`TF_STATE_BUCKET`), тому кожен запуск оновлює ту саму інфраструктуру, а не створює новий сервер. Блокування state — через `use_lockfile` (Terraform 1.10+).
 - **SSH-ключ** зберігається лише в секреті `EC2_SSH_KEY_B64`. Публічний ключ для `aws_key_pair` генерується з нього в пайплайні, тому окремо його ніде вказувати не треба.
-- **Сервер** — Ubuntu 24.04, `t3.micro` (Free Tier), регіон `eu-central-1` (Франкфурт). Docker встановлюється скриптом `user_data.sh` при першому запуску.
+- **Сервер** — Amazon Linux 2023, `t3.micro` (Free Tier), регіон `eu-central-1` (Франкфурт). Docker встановлюється скриптом `user_data.sh` при першому запуску.
 - **Образ** тегується хешем коміту, тому на сервері завжди відомо, яка версія працює (поле `version` у `/health`).
 
 ## Локальний запуск
@@ -205,7 +205,7 @@ curl http://<public_ip>/health
 Підключення до сервера вручну:
 
 ```bash
-ssh -i ~/.ssh/unit-converter ubuntu@<public_ip>
+ssh -i ~/.ssh/unit-converter ec2-user@<public_ip>
 sudo docker ps
 sudo docker logs unit-converter
 ```

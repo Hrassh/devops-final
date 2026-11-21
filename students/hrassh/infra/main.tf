@@ -2,13 +2,18 @@ data "aws_vpc" "default" {
   default = true
 }
 
-data "aws_ami" "ubuntu" {
+data "aws_ami" "amazon_linux" {
   most_recent = true
-  owners      = ["099720108477"]
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
+    values = ["al2023-ami-2023.*-x86_64"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
   }
 
   filter {
@@ -52,7 +57,7 @@ resource "aws_security_group" "app" {
 }
 
 resource "aws_instance" "app" {
-  ami                         = data.aws_ami.ubuntu.id
+  ami                         = data.aws_ami.amazon_linux.id
   instance_type               = var.instance_type
   key_name                    = aws_key_pair.deploy.key_name
   vpc_security_group_ids      = [aws_security_group.app.id]
