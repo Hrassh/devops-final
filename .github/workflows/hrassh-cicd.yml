@@ -49,14 +49,8 @@ jobs:
     name: Build and push Docker image
     needs: test
     runs-on: ubuntu-latest
-    outputs:
-      image: ${{ steps.vars.outputs.image }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set image name
-        id: vars
-        run: echo "image=${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-buildx-action@v3
 
@@ -146,7 +140,7 @@ jobs:
       url: http://${{ needs.infra.outputs.public_ip }}
     env:
       HOST: ${{ needs.infra.outputs.public_ip }}
-      IMAGE: ${{ needs.build.outputs.image }}
+      IMAGE: ${{ secrets.DOCKER_USERNAME }}/unit-converter:${{ github.sha }}
     steps:
       - name: Prepare SSH key
         env:
